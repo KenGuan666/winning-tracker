@@ -1,5 +1,6 @@
 # Product Definition: Winning Tracker
 
+Version: 0.0.0, Nov 17 2021
 A tool which visualizes your game winnings over time.
 
 ## Overview
@@ -34,16 +35,13 @@ We provide these basic functionalities:
 
 * Visualization
 
-  1. Summary Statistics
+  1. Earning Over Time
+
+     Earning Over Time, filter by Place, People, Tags, Time Interval, Currency. Aggregation over Games, Currency (with conversion).
+
+  2. Summary Statistics
 
      Net Earn overall, total hours, hourly rate, total Number of Hands (where applicable)
-
-  2. Earning Over Time
-
-     Earning Over Time, filter by Place, People, Tags, Time Interval, Currency. Aggregation over Games, Currency (with conversion). 
-
-  3. Sessions
-     Distribution graph of Session Length, Session Net Earn.
 
 
 ## UX Sketch
@@ -56,7 +54,7 @@ We provide these basic functionalities:
      * A vertical list of Game buttons. New app instance automatically has Texas Hold'em. Each Game button contains Game name, Net Earn Overall and Time Since first session. onClick -> Game Page (4)
 
   2. New Game Page
-     
+
      * A textbox for Game name
      * "Custom Field" plus sign, onClick -> Custom Fields Popup Page (3)
      * "Copy Custom Fields from Game" dropdown
@@ -74,21 +72,19 @@ We provide these basic functionalities:
      * "New Session" plus sign, onClick -> New Session Page (5)
      * a vertical list of Session buttons. Each Session button contains Net Earn and Date. onClick -> New Session Page (5) with existing info pre-filled
      * Back button at top. onClick -> All Games Page (1)
-     
+
   5. New Session Page
      * Text box for each field
      * Back button. onClick -> Game Page (4)
      * Done button. onClick -> Game Page (4)
-     
+
   6. Graph Page
      * Title banner at top
      * Horizontal Stack of icons at bottom. Options are Game and Graph. Games onClick -> Last Seen Games Page (1, 4)
-     * A graph at center 
+     * A graph at center
      * Filter button. onClick -> Filter Popup Page (7)
 
   7. Filter Popup Page
      * Drop down menus for 1-option filters
      * Checkboxes for multiple-option filters
      * Close button. onClick -> Graph Page (6)
-
-     
