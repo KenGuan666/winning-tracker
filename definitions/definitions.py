@@ -4,10 +4,10 @@ from typing import ClassVar, List
 class FieldDefinition:
 
     common_name_to_accepted_types : ClassVar[List[str]] = {
-        'number': float,
-        'date': datetime.date,
-        'text': str,
-        'list': list,
+        'number': [int, float],
+        'date': [datetime.date],
+        'text': [str],
+        'list': [list]
     }
 
     def __init__(self, fieldName: str, fieldType: str, required: bool=False):

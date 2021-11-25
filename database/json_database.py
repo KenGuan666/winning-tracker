@@ -13,8 +13,8 @@ Representation:
     TableName1: {
         SCHEMA_KEY: {
             columnName: {
-                'type': number,
-                'required': True
+                SCHEMA_TYPE_KEY: number,
+                SCHEMA_REQUIRED_KEY: True
             },
             columnName: { ... }
             ...
@@ -32,7 +32,9 @@ Representation:
 class JSONDatabase(Database):
     
     DEFAULT_DB = 'json_database.json'
-    SCHEMA_KEY = 'TABLE_SCHEMA_DEFINITION'
+    SCHEMA_KEY = 'SCHEMA_DEFINITION'
+    SCHEMA_TYPE_KEY = 'SCHEMA_TYPE'
+    SCHEMA_REQUIRED_KEY = 'SCHEMA_REQUIRED'
     ROWS_KEY = 'ROWS'
 
     def read_data_to_memory(self) -> Dict[str, Dict]:
@@ -67,7 +69,15 @@ class JSONDatabase(Database):
     Raises exception if illegal
     """
     def verify_schema(self, tableSchema: Dict[str, Dict[str, str]], values: Dict[str, Any]):
-        return
+
+        for fieldName, properties in tableSchema.items():
+            if fieldName in values:
+                passedType = type(values[fieldName])
+                requiredTypes = FieldDefinition.common_name_to_accepted_types[properties[self.SCHEMA_TYPE_KEY]]
+                if passedType not in requiredTypes:
+                    raise TypeError(f'field {fieldName} is not in {str(requiredTypes)}')
+            elif properties[self.SCHEMA_REQUIRED_KEY]:
+                raise ValueError(f'required field {fieldName} is not present')
 
     """
     Creates a new entry under tableName

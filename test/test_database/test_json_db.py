@@ -12,8 +12,6 @@ class JSONDatabaseTests(unittest.TestCase):
     def setUpClass(cls):
         cls.json_db = JSONDatabase()
         cls.json_db.DEFAULT_DB = test_filename
-        with open(test_filename, 'w') as f:
-            f.write('{}')
     
     @classmethod
     def tearDownClass(cls):
@@ -28,9 +26,7 @@ class TestDBSanity(JSONDatabaseTests):
             f.write(payload_txt)
 
         loaded_data = self.json_db.read_data_to_memory()
-        self.assertEqual(loaded_data, {
-            'key': 'value'
-        })
+        self.assertEqual(loaded_data, { 'key': 'value' })
 
     def test_dump(self):
         payload_json = { 'key': 'value' }
@@ -62,8 +58,8 @@ class TestTableAPI(JSONDatabaseTests):
 
         schema = {
             'people': {
-                'type': 'list',
-                'required': False
+                self.json_db.SCHEMA_TYPE_KEY: 'list',
+                self.json_db.SCHEMA_REQUIRED_KEY: False
             }
         }
         success =  self.json_db.create_table(PLO, schema)
@@ -71,9 +67,7 @@ class TestTableAPI(JSONDatabaseTests):
         expected_state_json = {
             TEXAS_HOLDEM: {},
             AOE4: {},
-            PLO: {
-                self.json_db.SCHEMA_KEY: schema
-            }
+            PLO: { self.json_db.SCHEMA_KEY: schema }
         }
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
@@ -85,15 +79,19 @@ class TestTableAPI(JSONDatabaseTests):
 
 class TestRowAPI(JSONDatabaseTests):
     
-    def test_insert_row_standard(self):
+    def test_insert_row(self):
         schema = { 
             'Net Earn': {
-                'type': 'number',
-                'required': True
+                self.json_db.SCHEMA_TYPE_KEY: 'number',
+                self.json_db.SCHEMA_REQUIRED_KEY: True
             },
             'Length': {
-                'type': 'number',
-                'required': True
+                self.json_db.SCHEMA_TYPE_KEY: 'number',
+                self.json_db.SCHEMA_REQUIRED_KEY: True
+            },
+            'Notes': {
+                self.json_db.SCHEMA_TYPE_KEY: 'text',
+                self.json_db.SCHEMA_REQUIRED_KEY: False
             }
         }
         before_state_json = { 
@@ -142,18 +140,20 @@ class TestRowAPI(JSONDatabaseTests):
         }
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
-    def test_insert_row_schema(self):
-        pass
+        self.assertRaises(TypeError, self.json_db.insert_row, TEXAS_HOLDEM, { 'Net Earn': '7', 'Length': 0.5 })
+        self.assertRaises(TypeError, self.json_db.insert_row, TEXAS_HOLDEM, { 'Net Earn': 7, 'Length': "1:00" })
+        self.assertRaises(ValueError, self.json_db.insert_row, TEXAS_HOLDEM, { 'Net Earn': 7 })
+        self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
     def test_delete_row(self):
         schema = { 
             'Net Earn': {
-                'type': 'number',
-                'required': True
+                self.json_db.SCHEMA_TYPE_KEY: 'number',
+                self.json_db.SCHEMA_REQUIRED_KEY: True
             },
             'Length': {
-                'type': 'number',
-                'required': True
+                self.json_db.SCHEMA_TYPE_KEY: 'number',
+                self.json_db.SCHEMA_REQUIRED_KEY: True
             }
         }
         uuid_hex = 'bdd5e2dadef144c5807cca942c6c0be7'
