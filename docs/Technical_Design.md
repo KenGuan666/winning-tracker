@@ -11,16 +11,16 @@ Can use Python3's built-in sqlite3 or JSON dict.
 `database/xx_database.py` provides db-related low level functions.
 
 ```
-db.create_table(name str, columns List[str])
+db.create_table(name: str, columns: Dict[str, str])
 
 db.get_all_table_names()
 
-db.insert_row(tableName str, values Dict[str] fieldType)
+db.insert_row(tableName: str, values: Dict[str, Any])
    # Returns uuid
 
-db.delete_row(tableName str, id uuid)
+db.delete_row(tableName: str, id: uuid)
 
-db.get_rows_with_conditions(tableName str, conditions List[VisualizeFilters])
+db.get_rows_with_conditions(tableName: str, conditions: List[VisualizeFilters])
 ```
 
 ## Backend API
@@ -31,31 +31,31 @@ Object Definitions
 ```
 # Defines a Field to a Game
 class FieldDefinition:
-   fieldName str
-   fieldType type
+   fieldName: str
+   fieldType: type
 
 # Defines a collection of Fields and their corresponding Values
 class FieldValueCollection:
-   values Dict[fieldName str] fieldType
+   values: Dict[str, str] # fieldName -> str(fieldType)
 
 class Game:
-   gameName str
-   fields List[FieldDefinition]
+   gameName: str
+   fields: List[FieldDefinition]
 
 class Session:
-   id uuid
-   game Game
-   fieldValues FieldValueCollection
+   id: uuid
+   game: Game
+   fieldValues: FieldValueCollection
 
 class FilterCondition:
-   operator enum[Greater, Less, Equal, Contains]
-   operandType type
-   operand operandType
-   negate bool
+   operator: enum[Greater, Less, Equal, Contains]
+   operandType: type
+   operand: operandType
+   negate: bool
 
 # Defines which fields to filter Session results
-class VisualizeFilters
-   filters Dict[fieldName str] List[FilterCondition]
+class VisualizeFilters:
+   filters: Dict[str, List[FilterCondition]]
 ```
 
 Game API
