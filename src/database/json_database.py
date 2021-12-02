@@ -31,21 +31,24 @@ Representation:
 """
 class JSONDatabase(Database):
     
-    DEFAULT_DB = 'json_database.json'
+    DEFAULT_DB_FILENAME = 'json_database.json'
     SCHEMA_KEY = 'SCHEMA_DEFINITION'
     SCHEMA_TYPE_KEY = 'SCHEMA_TYPE'
     SCHEMA_REQUIRED_KEY = 'SCHEMA_REQUIRED'
     ROWS_KEY = 'ROWS'
 
+    def reset_database(self):
+        self.write_data_to_disk({})
+
     def read_data_to_memory(self) -> Dict[str, Dict]:
         try:
-            with open(self.DEFAULT_DB) as f:
+            with open(self.DEFAULT_DB_FILENAME) as f:
                 return json.load(f)
         except:
             return {}
 
     def write_data_to_disk(self, data: Dict[str, Dict]):
-        with open(self.DEFAULT_DB, 'w') as f:
+        with open(self.DEFAULT_DB_FILENAME, 'w') as f:
             json.dump(data, f)
 
     def get_all_table_names(self):
@@ -73,7 +76,7 @@ class JSONDatabase(Database):
         for fieldName, properties in tableSchema.items():
             if fieldName in values:
                 passedType = type(values[fieldName])
-                requiredTypes = FieldDefinition.common_name_to_accepted_types[properties[self.SCHEMA_TYPE_KEY]]
+                requiredTypes = FieldDefinition.CommonNameToAcceptedTypes[properties[self.SCHEMA_TYPE_KEY]]
                 if passedType not in requiredTypes:
                     raise TypeError(f'field {fieldName} is not in {str(requiredTypes)}')
             elif properties[self.SCHEMA_REQUIRED_KEY]:

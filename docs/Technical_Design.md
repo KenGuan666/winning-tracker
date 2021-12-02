@@ -13,6 +13,9 @@ Can use Python3's built-in sqlite3 or JSON dict.
 ```
 db.create_table(name: str, columns: Dict[str, str])
 
+db.get_table_schema(name: str)
+   # returns Dict[str, Dict[str, str]]
+
 db.get_all_table_names()
 
 db.insert_row(tableName: str, values: Dict[str, Any])
