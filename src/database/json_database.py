@@ -1,9 +1,9 @@
-from .abstract_database import Database
-from typing import List, Dict, Any
-from definitions import FieldDefinition
-
 import json
 import uuid
+from typing import List, Dict, Any
+
+from .abstract_database import Database
+from definitions import FieldDefinition, DatabaseKeys
 
 
 """
@@ -11,12 +11,12 @@ A JSON-based Database implementation
 Representation:
 {
     TableName1: {
-        SCHEMA_KEY: {
-            columnName: {
+        DatabaseKeys.SCHEMA_KEY: {
+            columnName1: {
                 SCHEMA_TYPE_KEY: number,
                 SCHEMA_REQUIRED_KEY: True
             },
-            columnName: { ... }
+            columnName2: { ... }
             ...
         },
         ROWS_KEY: {
@@ -32,10 +32,6 @@ Representation:
 class JSONDatabase(Database):
     
     DEFAULT_DB_FILENAME = 'json_database.json'
-    SCHEMA_KEY = 'SCHEMA_DEFINITION'
-    SCHEMA_TYPE_KEY = 'SCHEMA_TYPE'
-    SCHEMA_REQUIRED_KEY = 'SCHEMA_REQUIRED'
-    ROWS_KEY = 'ROWS'
 
     def reset_database(self):
         self.write_data_to_disk({})
@@ -63,9 +59,22 @@ class JSONDatabase(Database):
         data = self.read_data_to_memory()
         if tableName in data:
             return False
-        data[tableName] = { self.SCHEMA_KEY: dict(columns) }
+        data[tableName] = { DatabaseKeys.SCHEMA_KEY: dict(columns) }
         self.write_data_to_disk(data)
         return True
+
+    def get_table_schema(self, tableName: str) -> List[FieldDefinition]:
+        data = self.read_data_to_memory()
+        if tableName not in data:
+            raise ValueError(f'table {tableName} does not exist')
+        schema = data[tableName][DatabaseKeys.SCHEMA_KEY]
+
+        return [
+            FieldDefinition(fieldName, 
+                            fieldType=schemaDict[DatabaseKeys.SCHEMA_TYPE_KEY], 
+                            required=schemaDict[DatabaseKeys.SCHEMA_REQUIRED_KEY]
+            ) for (fieldName, schemaDict) in schema.items()
+        ]
 
     """
     Verify whether the input value against schema
@@ -76,10 +85,10 @@ class JSONDatabase(Database):
         for fieldName, properties in tableSchema.items():
             if fieldName in values:
                 passedType = type(values[fieldName])
-                requiredTypes = FieldDefinition.CommonNameToAcceptedTypes[properties[self.SCHEMA_TYPE_KEY]]
+                requiredTypes = FieldDefinition.CommonNameToAcceptedTypes[properties[DatabaseKeys.SCHEMA_TYPE_KEY]]
                 if passedType not in requiredTypes:
                     raise TypeError(f'field {fieldName} is not in {str(requiredTypes)}')
-            elif properties[self.SCHEMA_REQUIRED_KEY]:
+            elif properties[DatabaseKeys.SCHEMA_REQUIRED_KEY]:
                 raise ValueError(f'required field {fieldName} is not present')
 
     """
@@ -90,11 +99,11 @@ class JSONDatabase(Database):
         data = self.read_data_to_memory()
         if tableName not in data:
             return
-        schema = data[tableName][self.SCHEMA_KEY]
+        schema = data[tableName][DatabaseKeys.SCHEMA_KEY]
         self.verify_schema(schema, values)
 
         _id = uuid.uuid4().hex
-        data[tableName][self.ROWS_KEY][_id] = list(values.values())
+        data[tableName][DatabaseKeys.ROWS_KEY][_id] = list(values.values())
         self.write_data_to_disk(data)
         return _id
 
@@ -106,7 +115,7 @@ class JSONDatabase(Database):
         data = self.read_data_to_memory()
         if tableName not in data:
             return
-        rows = data[tableName][self.ROWS_KEY]
+        rows = data[tableName][DatabaseKeys.ROWS_KEY]
         if _id not in rows:
             return
         del rows[_id]

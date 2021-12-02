@@ -16,3 +16,9 @@ class DefaultFieldNames:
     LENGTH = 'Length'
     TAGS = 'Tags'
     NOTE = 'Note'
+
+class DatabaseKeys:
+    SCHEMA_KEY = 'SCHEMA_DEFINITION'
+    SCHEMA_TYPE_KEY = 'SCHEMA_TYPE'
+    SCHEMA_REQUIRED_KEY = 'SCHEMA_REQUIRED'
+    ROWS_KEY = 'ROWS'

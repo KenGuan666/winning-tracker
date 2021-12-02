@@ -1,4 +1,5 @@
 import unittest
+
 from definitions import FieldDefinition, FieldType, DefaultFieldNames, \
                     Game, GameName
 
@@ -27,9 +28,10 @@ class TestGameDefinition(unittest.TestCase):
         fieldDefs = [FieldDefinition('field', FieldType.NUMBER)]
         game = Game(GameName.TEXAS_HOLDEM, fieldDefs)
 
-        expectedFields = [f.as_dict() for f in fieldDefs]
-        expectedFields.extend([f.as_dict() for f in Game.DefaultFields])
-        self.assertCountEqual([f.as_dict() for f in game.fields], expectedFields)
+        expectedFields = fieldDefs[0].as_dict()
+        for f in Game.DefaultFields:
+            expectedFields.update(f.as_dict())
+        self.assertDictEqual(game.all_fields_as_dict(), expectedFields)
 
     def test_no_duplicate_fields(self):
         customFields = [
@@ -39,12 +41,14 @@ class TestGameDefinition(unittest.TestCase):
         game = Game(GameName.TEXAS_HOLDEM, customFields)
 
         # The newly defined custom field overwrites default definition of 'Tags'
-        expectedFields = [f.as_dict() for f in [
+        expectedFields = {}
+        for f in [
             FieldDefinition(DefaultFieldNames.NET_EARN, FieldType.NUMBER, required=True),
             FieldDefinition(DefaultFieldNames.DATE, FieldType.DATE),
             FieldDefinition(DefaultFieldNames.LENGTH, FieldType.NUMBER),
             FieldDefinition(DefaultFieldNames.TAGS, FieldType.TEXT),
             FieldDefinition(DefaultFieldNames.NOTE, FieldType.TEXT),
-            FieldDefinition('People', FieldType.LIST)
-        ]]
-        self.assertCountEqual([f.as_dict() for f in game.fields], expectedFields)
+            FieldDefinition('People', FieldType.LIST)]:
+            expectedFields.update(f.as_dict())
+
+        self.assertDictEqual(game.all_fields_as_dict(), expectedFields)

@@ -11,7 +11,7 @@ Can use Python3's built-in sqlite3 or JSON dict.
 `database/xx_database.py` provides db-related low level functions.
 
 ```
-db.create_table(name: str, columns: Dict[str, str])
+db.create_table(name: str, columns: Dict[str, Dict])
 
 db.get_table_schema(name: str)
    # returns Dict[str, Dict[str, str]]

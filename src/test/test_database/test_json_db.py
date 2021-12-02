@@ -1,8 +1,9 @@
 import unittest
 import os
 import json
+
 from database import JSONDatabase
-from definitions import FieldDefinition, GameName, FieldType
+from definitions import FieldDefinition, GameName, FieldType, DatabaseKeys
 
 
 test_filename = 'test_filename.json'
@@ -63,16 +64,16 @@ class TestTableAPI(JSONDatabaseTests):
 
         schema = {
             'people': {
-                self.json_db.SCHEMA_TYPE_KEY: FieldType.LIST,
-                self.json_db.SCHEMA_REQUIRED_KEY: False
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.LIST,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: False
             }
         }
-        success =  self.json_db.create_table(GameName.PLO, schema)
+        success = self.json_db.create_table(GameName.PLO, schema)
         self.assertTrue(success)
         expected_state_json = {
             GameName.TEXAS_HOLDEM: {},
             GameName.AOE4: {},
-            GameName.PLO: { self.json_db.SCHEMA_KEY: schema }
+            GameName.PLO: { DatabaseKeys.SCHEMA_KEY: schema }
         }
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
@@ -81,34 +82,49 @@ class TestTableAPI(JSONDatabaseTests):
         self.assertFalse(success)
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
+    def test_get_table_schema(self):
+        schema = {
+            'people': {
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.LIST,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: False
+            }
+        }
+        self.json_db.create_table(GameName.PLO, schema)
+
+        self.assertRaises(ValueError, self.json_db.get_table_schema, "non-existing table")
+        fieldDefinitions = self.json_db.get_table_schema(GameName.PLO)
+        self.assertEqual(len(fieldDefinitions), 1)
+
+        self.assertDictEqual(fieldDefinitions[0].as_dict(), schema)
+
 
 class TestRowAPI(JSONDatabaseTests):
     
     def test_insert_row(self):
         schema = { 
             'Net Earn': {
-                self.json_db.SCHEMA_TYPE_KEY: FieldType.NUMBER,
-                self.json_db.SCHEMA_REQUIRED_KEY: True
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             },
             'Length': {
-                self.json_db.SCHEMA_TYPE_KEY: FieldType.NUMBER,
-                self.json_db.SCHEMA_REQUIRED_KEY: True
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             },
             'Notes': {
-                self.json_db.SCHEMA_TYPE_KEY: FieldType.TEXT,
-                self.json_db.SCHEMA_REQUIRED_KEY: False
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.TEXT,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: False
             }
         }
         before_state_json = { 
             GameName.TEXAS_HOLDEM: {
-                self.json_db.SCHEMA_KEY: schema,
-                self.json_db.ROWS_KEY: {
+                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.ROWS_KEY: {
                     '00dde7a1f1fd4be99d4a5c252b035811': [10, 2]
                 }
             },
             GameName.PLO: {
-                self.json_db.SCHEMA_KEY: schema,
-                self.json_db.ROWS_KEY: {
+                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.ROWS_KEY: {
                     'd459a6d3b1c9479488e48f51470cf0ff': [-3, 1]
                 }
             }
@@ -129,15 +145,15 @@ class TestRowAPI(JSONDatabaseTests):
 
         expected_state_json = { 
             GameName.TEXAS_HOLDEM: {
-                self.json_db.SCHEMA_KEY: schema,
-                self.json_db.ROWS_KEY: {
+                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.ROWS_KEY: {
                     '00dde7a1f1fd4be99d4a5c252b035811': [10, 2],
                     uuidTexas: [7, 0.5]
                 }
             },
             GameName.PLO: {
-                self.json_db.SCHEMA_KEY: schema,
-                self.json_db.ROWS_KEY: {
+                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.ROWS_KEY: {
                     'd459a6d3b1c9479488e48f51470cf0ff': [-3, 1],
                     uuidPLO: [8, 3]
                 }
@@ -153,19 +169,19 @@ class TestRowAPI(JSONDatabaseTests):
     def test_delete_row(self):
         schema = { 
             'Net Earn': {
-                self.json_db.SCHEMA_TYPE_KEY: FieldType.NUMBER,
-                self.json_db.SCHEMA_REQUIRED_KEY: True
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             },
             'Length': {
-                self.json_db.SCHEMA_TYPE_KEY: FieldType.NUMBER,
-                self.json_db.SCHEMA_REQUIRED_KEY: True
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             }
         }
         uuid_hex = 'bdd5e2dadef144c5807cca942c6c0be7'
         before_state_json = { 
             GameName.TEXAS_HOLDEM: {
-                self.json_db.SCHEMA_KEY: schema,
-                self.json_db.ROWS_KEY: {
+                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.ROWS_KEY: {
                     uuid_hex: [11, 2],
                     '00dde7a1f1fd4be99d4a5c252b035811': [10, 2]
                 }
@@ -177,8 +193,8 @@ class TestRowAPI(JSONDatabaseTests):
         self.assertTrue(success)
         expected_state_json = { 
             GameName.TEXAS_HOLDEM: {
-                self.json_db.SCHEMA_KEY: schema,
-                self.json_db.ROWS_KEY: {
+                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.ROWS_KEY: {
                     '00dde7a1f1fd4be99d4a5c252b035811': [10, 2]
                 }
             }

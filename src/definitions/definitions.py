@@ -1,6 +1,6 @@
 import datetime
 from typing import List
-from .constants import FieldType, DefaultFieldNames
+from .constants import FieldType, DefaultFieldNames, DatabaseKeys
 
 
 class FieldDefinition:
@@ -21,9 +21,10 @@ class FieldDefinition:
 
     def as_dict(self):
         return {
-            'fieldName': self.fieldName,
-            'fieldType': self.fieldType,
-            'required': self.required
+            self.fieldName: {
+                DatabaseKeys.SCHEMA_TYPE_KEY: self.fieldType,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: self.required
+            }
         }
 
 
@@ -51,3 +52,9 @@ class Game:
                     break
             
             self.fields.append(field)
+
+    def all_fields_as_dict(self):
+        res = {}
+        for field in self.fields:
+            res.update(field.as_dict())
+        return res
