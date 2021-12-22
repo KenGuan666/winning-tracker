@@ -21,7 +21,8 @@ class JSONDatabaseTests(unittest.TestCase):
 
 class TestDBSanity(JSONDatabaseTests):
 
-    def test_load(self):
+    # Test Case: db.read_data_to_memory
+    def test_read_data_to_memory(self):
         payload_txt = """{ "key": "value" }"""
         
         with open(test_filename, 'w') as f:
@@ -30,19 +31,22 @@ class TestDBSanity(JSONDatabaseTests):
         loaded_data = self.json_db.read_data_to_memory()
         self.assertEqual(loaded_data, { 'key': 'value' })
 
-    def test_dump(self):
+    # Test Case: db.write_data_to_disk
+    def test_write_data_to_disk(self):
         payload_json = { 'key': 'value' }
         self.json_db.write_data_to_disk(payload_json)
         with open(test_filename) as f:
             self.assertEqual(json.load(f), payload_json)
 
+    # Test Case: db.reset_database
     def test_reset_database(self):
         self.json_db.reset_database()
         self.assertDictEqual(self.json_db.read_data_to_memory(), {})
 
 
 class TestTableAPI(JSONDatabaseTests):
-    
+
+    # Test Case: db.get_all_table_names
     def test_get_all_table_names(self):
         db_state_text = """{ 
             "Texas Hold'em": {},
@@ -54,6 +58,7 @@ class TestTableAPI(JSONDatabaseTests):
         all_games = self.json_db.get_all_table_names()
         self.assertCountEqual(all_games, [GameName.TEXAS_HOLDEM, GameName.AOE4])
 
+    # Test Case:db.create_table
     def test_create_table(self):
         before_state_text = """{ 
             "Texas Hold'em": {},
@@ -82,6 +87,7 @@ class TestTableAPI(JSONDatabaseTests):
         self.assertFalse(success)
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
+    # Test Case: db.get_table_schema
     def test_get_table_schema(self):
         schema = {
             'people': {
@@ -99,8 +105,11 @@ class TestTableAPI(JSONDatabaseTests):
 
 
 class TestRowAPI(JSONDatabaseTests):
-    
+
+    # Test Case:db.insert_row
     def test_insert_row(self):
+
+        # Set up state before db.insert_row
         schema = { 
             'Net Earn': {
                 DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
@@ -131,6 +140,7 @@ class TestRowAPI(JSONDatabaseTests):
         }
         self.json_db.write_data_to_disk(before_state_json)
 
+        # db.insert_row
         uuidTexas = self.json_db.insert_row(GameName.TEXAS_HOLDEM, {
             'Net Earn': 7,
             'Length': 0.5
@@ -141,8 +151,8 @@ class TestRowAPI(JSONDatabaseTests):
             'Length': 3
         })
         self.assertTrue(uuidPLO)
-        self.assertFalse(self.json_db.insert_row(GameName.AOE4, {}))
 
+        # Should reach expected state after db.insert_row
         expected_state_json = { 
             GameName.TEXAS_HOLDEM: {
                 DatabaseKeys.SCHEMA_KEY: schema,
@@ -166,7 +176,17 @@ class TestRowAPI(JSONDatabaseTests):
         self.assertRaises(ValueError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { 'Net Earn': 7 })
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
+        # Should fail db.insert_row with invalid value schema
+        self.assertFalse(self.json_db.insert_row(GameName.AOE4, {}))
+        self.assertFalse(self.json_db.insert_row(GameName.AOE4, {
+            'Net Earn': '8',
+            'Length': 3
+        }))
+
+    # Test Case:db.delete_row
     def test_delete_row(self):
+
+        # Set up state before db.delete_row
         schema = { 
             'Net Earn': {
                 DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
@@ -189,8 +209,11 @@ class TestRowAPI(JSONDatabaseTests):
         }
         self.json_db.write_data_to_disk(before_state_json)
 
+        # db.delete_row
         success =  self.json_db.delete_row(GameName.TEXAS_HOLDEM, uuid_hex)
         self.assertTrue(success)
+
+        # Should reach expected state after db.delete_row
         expected_state_json = { 
             GameName.TEXAS_HOLDEM: {
                 DatabaseKeys.SCHEMA_KEY: schema,
@@ -201,11 +224,9 @@ class TestRowAPI(JSONDatabaseTests):
         }
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
-        # No effect if provided incorrect Game name or uuid
-        success =  self.json_db.delete_row(GameName.PLO, uuid_hex)
-        self.assertFalse(success)
-        success =  self.json_db.delete_row(GameName.TEXAS_HOLDEM, 'df3b813ef8364bee8468612c95bf6b0f')
-        self.assertFalse(success)
+        # Should fail db.delete_row with incorrect Game name or uuid
+        self.assertFalse(self.json_db.delete_row(GameName.PLO, uuid_hex))
+        self.assertFalse(self.json_db.delete_row(GameName.TEXAS_HOLDEM, 'df3b813ef8364bee8468612c95bf6b0f'))
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
 

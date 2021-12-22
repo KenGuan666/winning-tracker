@@ -38,17 +38,17 @@ class FieldDefinition:
    fieldType: type
 
 # Defines a collection of Fields and their corresponding Values
-class FieldValueCollection:
-   values: Dict[str, str] # fieldName -> str(fieldType)
+class GameSessionFields:
+   gameName: Game
+   values: Dict[str, Any] # fieldName -> value
 
 class Game:
    gameName: str
-   fields: List[FieldDefinition]
+   fields: List[FieldDefinition] # auto-populate default fields if not provided
 
 class Session:
    id: uuid
-   game: Game
-   fieldValues: FieldValueCollection
+   fieldValues: GameSessionFields
 
 class FilterCondition:
    operator: enum[Greater, Less, Equal, Contains]
@@ -75,12 +75,12 @@ func get_all_games()
 
 Session API
 ```
-func add_session(gameName str, fieldValues FieldValueCollection)
+func add_session(sessionFields GameSessionFields)
    # Creates Session object
    # Creates a row in Table ${gameName}
    # Calls db.insert_row
 
-func edit_session(gameName str, sessionId uuid, newFieldValues FieldValueCollection)
+func edit_session(sessionId uuid, sessionFields GameSessionFields)
    # Modifies the row in Table
    # Returns new Session object
    # Calls db.delete_row & db.insert_row
