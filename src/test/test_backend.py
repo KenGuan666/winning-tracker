@@ -26,8 +26,8 @@ class TestGameAPI(BackendTests):
     def test_add_game(self):
 
         # backend.add_game
-        game = self.backend.add_game(GameName.TEXAS_HOLDEM,[])
-        self.assertEqual(game.name, GameName.TEXAS_HOLDEM)
+        game = self.backend.add_game(GameName.TEXAS_HOLDEM, [])
+        self.assertEqual(game.get_name(), GameName.TEXAS_HOLDEM)
 
         # Check Game and schema in backend.db
         expectedAllGames = [GameName.TEXAS_HOLDEM]

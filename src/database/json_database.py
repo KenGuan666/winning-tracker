@@ -93,7 +93,7 @@ class JSONDatabase(Database):
 
     """
     Creates a new entry under tableName
-    Check response to see if successful
+    Returns True if successful
     """
     def insert_row(self, tableName: str, values: Dict[str, Any]):
         data = self.read_data_to_memory()
@@ -103,13 +103,15 @@ class JSONDatabase(Database):
         self.verify_schema(schema, values)
 
         _id = uuid.uuid4().hex
+        while _id in data[tableName][DatabaseKeys.ROWS_KEY]:
+            _id = uuid.uuid4().hex
         data[tableName][DatabaseKeys.ROWS_KEY][_id] = list(values.values())
         self.write_data_to_disk(data)
         return _id
 
     """
-    Deletes a new key-value pair in the db
-    Check response to see if successful
+    Deletes a key-value pair in the db
+    Returns True if successful
     """
     def delete_row(self, tableName: str, _id: str):
         data = self.read_data_to_memory()

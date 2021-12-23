@@ -22,3 +22,9 @@ class DatabaseKeys:
     SCHEMA_TYPE_KEY = 'SCHEMA_TYPE'
     SCHEMA_REQUIRED_KEY = 'SCHEMA_REQUIRED'
     ROWS_KEY = 'ROWS'
+
+DISALLOWED_NUMBER_INPUTS = [
+    'nan',
+    'inf',
+    'infinity',
+]

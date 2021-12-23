@@ -3,7 +3,7 @@ import os
 import json
 
 from database import JSONDatabase
-from definitions import FieldDefinition, GameName, FieldType, DatabaseKeys
+from definitions import FieldDefinition, GameName, FieldType, DatabaseKeys, DefaultFieldNames
 
 
 test_filename = 'test_filename.json'
@@ -111,15 +111,15 @@ class TestRowAPI(JSONDatabaseTests):
 
         # Set up state before db.insert_row
         schema = { 
-            'Net Earn': {
+            DefaultFieldNames.NET_EARN: {
                 DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
                 DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             },
-            'Length': {
+            DefaultFieldNames.LENGTH: {
                 DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
                 DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             },
-            'Notes': {
+            DefaultFieldNames.NOTE: {
                 DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.TEXT,
                 DatabaseKeys.SCHEMA_REQUIRED_KEY: False
             }
@@ -142,13 +142,13 @@ class TestRowAPI(JSONDatabaseTests):
 
         # db.insert_row
         uuidTexas = self.json_db.insert_row(GameName.TEXAS_HOLDEM, {
-            'Net Earn': 7,
-            'Length': 0.5
+            DefaultFieldNames.NET_EARN: 7,
+            DefaultFieldNames.LENGTH: 0.5
         })
         self.assertTrue(uuidTexas)
         uuidPLO = self.json_db.insert_row(GameName.PLO, {
-            'Net Earn': 8,
-            'Length': 3
+            DefaultFieldNames.NET_EARN: 8,
+            DefaultFieldNames.LENGTH: 3
         })
         self.assertTrue(uuidPLO)
 
@@ -171,16 +171,16 @@ class TestRowAPI(JSONDatabaseTests):
         }
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
-        self.assertRaises(TypeError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { 'Net Earn': '7', 'Length': 0.5 })
-        self.assertRaises(TypeError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { 'Net Earn': 7, 'Length': "1:00" })
-        self.assertRaises(ValueError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { 'Net Earn': 7 })
+        self.assertRaises(TypeError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { DefaultFieldNames.NET_EARN: '7', DefaultFieldNames.LENGTH: 0.5 })
+        self.assertRaises(TypeError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { DefaultFieldNames.NET_EARN: 7, DefaultFieldNames.LENGTH: "1:00" })
+        self.assertRaises(ValueError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { DefaultFieldNames.NET_EARN: 7 })
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
         # Should fail db.insert_row with invalid value schema
         self.assertFalse(self.json_db.insert_row(GameName.AOE4, {}))
         self.assertFalse(self.json_db.insert_row(GameName.AOE4, {
-            'Net Earn': '8',
-            'Length': 3
+            DefaultFieldNames.NET_EARN: '8',
+            DefaultFieldNames.LENGTH: 3
         }))
 
     # Test Case:db.delete_row
@@ -188,11 +188,11 @@ class TestRowAPI(JSONDatabaseTests):
 
         # Set up state before db.delete_row
         schema = { 
-            'Net Earn': {
+            DefaultFieldNames.NET_EARN: {
                 DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
                 DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             },
-            'Length': {
+            DefaultFieldNames.LENGTH: {
                 DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
                 DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             }

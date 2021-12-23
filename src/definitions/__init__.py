@@ -1,2 +1,2 @@
-from .definitions import FieldDefinition, Game
+from .definitions import FieldDefinition, Game, Session
 from .constants import GameName, FieldType, DefaultFieldNames, DatabaseKeys
