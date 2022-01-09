@@ -60,10 +60,7 @@ class TestTableAPI(JSONDatabaseTests):
 
     # Test Case:db.create_table
     def test_create_table(self):
-        before_state_text = """{ 
-            "Texas Hold'em": {},
-            "Age of Empires IV": {}
-        }"""
+        before_state_text = "{}"
         with open(test_filename, 'w') as f:
             f.write(before_state_text)
 
@@ -76,9 +73,10 @@ class TestTableAPI(JSONDatabaseTests):
         success = self.json_db.create_table(GameName.PLO, schema)
         self.assertTrue(success)
         expected_state_json = {
-            GameName.TEXAS_HOLDEM: {},
-            GameName.AOE4: {},
-            GameName.PLO: { DatabaseKeys.SCHEMA_KEY: schema }
+            GameName.PLO: {
+                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.ROWS_KEY: {},
+            }
         }
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
@@ -106,11 +104,8 @@ class TestTableAPI(JSONDatabaseTests):
 
 class TestRowAPI(JSONDatabaseTests):
 
-    # Test Case:db.insert_row
-    def test_insert_row(self):
-
-        # Set up state before db.insert_row
-        schema = { 
+    def setUp(self):
+        self.schema = {
             DefaultFieldNames.NET_EARN: {
                 DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
                 DatabaseKeys.SCHEMA_REQUIRED_KEY: True
@@ -126,19 +121,28 @@ class TestRowAPI(JSONDatabaseTests):
         }
         before_state_json = { 
             GameName.TEXAS_HOLDEM: {
-                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.SCHEMA_KEY: self.schema,
                 DatabaseKeys.ROWS_KEY: {
-                    '00dde7a1f1fd4be99d4a5c252b035811': [10, 2]
+                    '00dde7a1f1fd4be99d4a5c252b035811': {
+                        DefaultFieldNames.NET_EARN: 10,
+                        DefaultFieldNames.LENGTH: 2,
+                    }
                 }
             },
             GameName.PLO: {
-                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.SCHEMA_KEY: self.schema,
                 DatabaseKeys.ROWS_KEY: {
-                    'd459a6d3b1c9479488e48f51470cf0ff': [-3, 1]
+                    'd459a6d3b1c9479488e48f51470cf0ff': {
+                        DefaultFieldNames.NET_EARN: -3,
+                        DefaultFieldNames.LENGTH: 1,
+                    }
                 }
             }
         }
         self.json_db.write_data_to_disk(before_state_json)
+
+    # Test Case:db.insert_row
+    def test_insert_row(self):
 
         # db.insert_row
         uuidTexas = self.json_db.insert_row(GameName.TEXAS_HOLDEM, {
@@ -153,30 +157,43 @@ class TestRowAPI(JSONDatabaseTests):
         self.assertTrue(uuidPLO)
 
         # Should reach expected state after db.insert_row
-        expected_state_json = { 
+        expected_state_json = {
             GameName.TEXAS_HOLDEM: {
-                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.SCHEMA_KEY: self.schema,
                 DatabaseKeys.ROWS_KEY: {
-                    '00dde7a1f1fd4be99d4a5c252b035811': [10, 2],
-                    uuidTexas: [7, 0.5]
+                    '00dde7a1f1fd4be99d4a5c252b035811': {
+                        DefaultFieldNames.NET_EARN: 10,
+                        DefaultFieldNames.LENGTH: 2,
+                    },
+                    uuidTexas: {
+                        DefaultFieldNames.NET_EARN: 7,
+                        DefaultFieldNames.LENGTH: 0.5,
+                    }
                 }
             },
             GameName.PLO: {
-                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.SCHEMA_KEY: self.schema,
                 DatabaseKeys.ROWS_KEY: {
-                    'd459a6d3b1c9479488e48f51470cf0ff': [-3, 1],
-                    uuidPLO: [8, 3]
+                    'd459a6d3b1c9479488e48f51470cf0ff': {
+                        DefaultFieldNames.NET_EARN: -3,
+                        DefaultFieldNames.LENGTH: 1,
+                    },
+                    uuidPLO: {
+                        DefaultFieldNames.NET_EARN: 8,
+                        DefaultFieldNames.LENGTH: 3,
+                    }
                 }
             }
         }
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
+        # Should fail db.insert_row with invalid value schema
         self.assertRaises(TypeError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { DefaultFieldNames.NET_EARN: '7', DefaultFieldNames.LENGTH: 0.5 })
         self.assertRaises(TypeError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { DefaultFieldNames.NET_EARN: 7, DefaultFieldNames.LENGTH: "1:00" })
         self.assertRaises(ValueError, self.json_db.insert_row, GameName.TEXAS_HOLDEM, { DefaultFieldNames.NET_EARN: 7 })
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
 
-        # Should fail db.insert_row with invalid value schema
+        # Should fail db.insert_row with incorrect table name
         self.assertFalse(self.json_db.insert_row(GameName.AOE4, {}))
         self.assertFalse(self.json_db.insert_row(GameName.AOE4, {
             DefaultFieldNames.NET_EARN: '8',
@@ -186,39 +203,24 @@ class TestRowAPI(JSONDatabaseTests):
     # Test Case:db.delete_row
     def test_delete_row(self):
 
-        # Set up state before db.delete_row
-        schema = { 
-            DefaultFieldNames.NET_EARN: {
-                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
-                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
-            },
-            DefaultFieldNames.LENGTH: {
-                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
-                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
-            }
-        }
-        uuid_hex = 'bdd5e2dadef144c5807cca942c6c0be7'
-        before_state_json = { 
-            GameName.TEXAS_HOLDEM: {
-                DatabaseKeys.SCHEMA_KEY: schema,
-                DatabaseKeys.ROWS_KEY: {
-                    uuid_hex: [11, 2],
-                    '00dde7a1f1fd4be99d4a5c252b035811': [10, 2]
-                }
-            }
-        }
-        self.json_db.write_data_to_disk(before_state_json)
-
         # db.delete_row
+        uuid_hex = '00dde7a1f1fd4be99d4a5c252b035811'
         success =  self.json_db.delete_row(GameName.TEXAS_HOLDEM, uuid_hex)
         self.assertTrue(success)
 
         # Should reach expected state after db.delete_row
-        expected_state_json = { 
+        expected_state_json = {
             GameName.TEXAS_HOLDEM: {
-                DatabaseKeys.SCHEMA_KEY: schema,
+                DatabaseKeys.SCHEMA_KEY: self.schema,
+                DatabaseKeys.ROWS_KEY: {}
+            },
+            GameName.PLO: {
+                DatabaseKeys.SCHEMA_KEY: self.schema,
                 DatabaseKeys.ROWS_KEY: {
-                    '00dde7a1f1fd4be99d4a5c252b035811': [10, 2]
+                    'd459a6d3b1c9479488e48f51470cf0ff': {
+                        DefaultFieldNames.NET_EARN: -3,
+                        DefaultFieldNames.LENGTH: 1,
+                    }
                 }
             }
         }
@@ -226,8 +228,41 @@ class TestRowAPI(JSONDatabaseTests):
 
         # Should fail db.delete_row with incorrect Game name or uuid
         self.assertFalse(self.json_db.delete_row(GameName.PLO, uuid_hex))
-        self.assertFalse(self.json_db.delete_row(GameName.TEXAS_HOLDEM, 'df3b813ef8364bee8468612c95bf6b0f'))
+        self.assertFalse(self.json_db.delete_row(GameName.TEXAS_HOLDEM, 'd459a6d3b1c9479488e48f51470cf0ff'))
         self.assertDictEqual(self.json_db.read_data_to_memory(), expected_state_json)
+
+    # Test Case: db.get_all_rows
+    def test_get_all_rows(self):
+
+        # insert a few more rows
+        uuid1 = self.json_db.insert_row(GameName.TEXAS_HOLDEM, {
+            DefaultFieldNames.NET_EARN: 7,
+            DefaultFieldNames.LENGTH: 0.5
+        })
+        uuid2 = self.json_db.insert_row(GameName.TEXAS_HOLDEM, {
+            DefaultFieldNames.NET_EARN: 8,
+            DefaultFieldNames.LENGTH: 3
+        })
+
+        expected_all_rows = {
+            '00dde7a1f1fd4be99d4a5c252b035811': {
+                DefaultFieldNames.NET_EARN: 10,
+                DefaultFieldNames.LENGTH: 2,
+            },
+            uuid1: {
+                DefaultFieldNames.NET_EARN: 7,
+                DefaultFieldNames.LENGTH: 0.5,
+            },
+            uuid2: {
+                DefaultFieldNames.NET_EARN: 8,
+                DefaultFieldNames.LENGTH: 3,
+            }
+        }
+
+        self.assertDictEqual(self.json_db.get_all_rows(GameName.TEXAS_HOLDEM), expected_all_rows)
+
+        # should fail db.get_all_rows on incorrect Game
+        self.assertFalse(self.json_db.get_all_rows(GameName.AOE4))
 
 
 if __name__ == '__main__':

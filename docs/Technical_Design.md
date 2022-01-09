@@ -18,12 +18,15 @@ db.get_table_schema(name: str)
 
 db.get_all_table_names()
 
-db.insert_row(tableName: str, values: Dict[str, Any])
+db.insert_row(tableName: str, values: Dict[str, Any], _id=None)
    # Returns uuid
 
-db.delete_row(tableName: str, id: uuid)
+db.delete_row(tableName: str, _id: uuid)
+
+db.get_all_rows(tableName: str)
 
 db.get_rows_with_conditions(tableName: str, conditions: List[VisualizeFilters])
+   # Acts like db.get_all_rows if conditions=None
 ```
 
 ## Backend API
@@ -71,31 +74,39 @@ func get_all_games()
 
 Session API
 ```
-func add_session(session Session)
+func add_session(session Session, _id=None)
    # Creates a row in Table ${gameName}
    # Calls db.insert_row
+   # Returns uuid
 
-func edit_session(sessionId uuid, newSession Session)
+func get_session_by_id(gameName str, sessionId uuid)
+   # Finds session by uuid, or None if not exists
+
+func edit_session(gameName str, sessionId uuid, newSession Session)
    # Modifies the row in Table
-   # Calls db.delete_row & db.insert_row
+   # Calls db.insert_row with previous _id
+   # Returns True if successful
 
 func delete_session(gameName str, sessionId uuid)
    # Deletes the row in Table
    # Calls db.delete_row
 
-func get_sessions(gameName str)
-   # Calls db.get_rows_with_conditions
-   ### TODO: Support Pagination
-```
-
-Visualization API
-```
 func get_sessions(gameName str, filters List[VisualizeFilters])
    # Each VisualizeFilters represents an AND
    # Different VisualizeFilters are linked with OR
    # Calls db.get_rows_with_conditions
+   # Returns a dict of { uuid: Session }
+```
 
-### TODO: Design the summary stats visualization
+Visualization API
+```
+### TODO: Design the visualization interface
+### How to visualize NET_EARN vs. date?
+### Should we provide interface for custom sort function?
+### Should we provide interface for other stats?
+
+func visualize_sessions(sessions List[Session])
+
 ```
 
 

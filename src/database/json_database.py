@@ -20,8 +20,12 @@ Representation:
             ...
         },
         ROWS_KEY: {
-            uuid1.hex: [column1, column2, ...],
-            uuid2.hex: [column1, column2, ...]
+            uuid1.hex: {
+                columnName1: ...,
+                columnName2: ...,
+            },
+            uuid2.hex: { ... }
+            ...
         }
     },
     TableName2: {
@@ -52,14 +56,17 @@ class JSONDatabase(Database):
         return list(data.keys())
 
     """
-    Creates a new key-value pair in the db
-    Check response to see if successful
+    Creates a new table in the db
+    Returns True if successful
     """
     def create_table(self, tableName: str, columns: Dict[str, Dict[str, str]]) -> bool:
         data = self.read_data_to_memory()
         if tableName in data:
             return False
-        data[tableName] = { DatabaseKeys.SCHEMA_KEY: dict(columns) }
+        data[tableName] = { 
+            DatabaseKeys.SCHEMA_KEY: dict(columns),
+            DatabaseKeys.ROWS_KEY: {},
+        }
         self.write_data_to_disk(data)
         return True
 
@@ -80,7 +87,7 @@ class JSONDatabase(Database):
     Verify whether the input value against schema
     Raises exception if illegal
     """
-    def verify_schema(self, tableSchema: Dict[str, Dict[str, str]], values: Dict[str, Any]):
+    def verify_schema(self, tableSchema: Dict[str, Dict[str, str]], values: Dict[str, Any]) -> None:
 
         for fieldName, properties in tableSchema.items():
             if fieldName in values:
@@ -93,27 +100,29 @@ class JSONDatabase(Database):
 
     """
     Creates a new entry under tableName
-    Returns True if successful
+    Caller may specify a uuid for the entry
+    Returns uuid if successful
     """
-    def insert_row(self, tableName: str, values: Dict[str, Any]):
+    def insert_row(self, tableName: str, values: Dict[str, Any], _id=None) -> bool:
         data = self.read_data_to_memory()
         if tableName not in data:
             return
         schema = data[tableName][DatabaseKeys.SCHEMA_KEY]
         self.verify_schema(schema, values)
 
-        _id = uuid.uuid4().hex
-        while _id in data[tableName][DatabaseKeys.ROWS_KEY]:
+        if not _id:
             _id = uuid.uuid4().hex
-        data[tableName][DatabaseKeys.ROWS_KEY][_id] = list(values.values())
+            while _id in data[tableName][DatabaseKeys.ROWS_KEY]:
+                _id = uuid.uuid4().hex
+        data[tableName][DatabaseKeys.ROWS_KEY][_id] = values
         self.write_data_to_disk(data)
         return _id
 
     """
-    Deletes a key-value pair in the db
+    Deletes an entry under tableName
     Returns True if successful
     """
-    def delete_row(self, tableName: str, _id: str):
+    def delete_row(self, tableName: str, _id: str) -> bool:
         data = self.read_data_to_memory()
         if tableName not in data:
             return
@@ -123,3 +132,13 @@ class JSONDatabase(Database):
         del rows[_id]
         self.write_data_to_disk(data)
         return True
+
+    """
+    Returns all entries under tableName
+    or None if tableName doesn't exist
+    """
+    def get_all_rows(self, tableName: str) -> Dict[str, Dict[str, Any]]:
+        data = self.read_data_to_memory()
+        if tableName not in data:
+            return
+        return data[tableName][DatabaseKeys.ROWS_KEY]

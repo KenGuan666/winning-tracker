@@ -87,6 +87,7 @@ class FieldDefinition:
             except:
                 self.raise_incompatible_type_error(value)
 
+        # handle LIST type
         if self.fieldType == FieldType.LIST:
             if isinstance(value, list) or isinstance(value, tuple):
                 return value
@@ -193,6 +194,12 @@ class Session:
 
     def get_values(self):
         return self.fieldValues
+
+    def equals(self, otherSession: 'Session'):
+        if isinstance(otherSession, Session):
+            return self.game.get_name() == otherSession.game.get_name() and \
+                self.fieldValues == otherSession.fieldValues
+        return False
 
 
 def is_disallowed_number_str(value):

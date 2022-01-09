@@ -23,3 +23,7 @@ class Database(ABC):
     @abstractmethod
     def delete_row(self, tableName: str, id: str):
         pass
+
+    @abstractmethod
+    def get_all_rows(self, tableName: str):
+        pass
