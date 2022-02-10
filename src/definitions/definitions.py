@@ -25,7 +25,7 @@ class FieldDefinition:
 
     CommonNameToAcceptedTypes = {
         FieldType.NUMBER: [int, float],
-        FieldType.DATE: [datetime.date],
+        FieldType.DATE: [str],
         FieldType.TEXT: [str],
         FieldType.LIST: [list]
     }
@@ -81,11 +81,14 @@ class FieldDefinition:
         # handle DATE type
         if self.fieldType == FieldType.DATE:
             if isinstance(value, datetime.date):
-                return value
-            try:
-                return datetime.datetime.strptime(value, '%Y/%m/%d')
-            except:
-                self.raise_incompatible_type_error(value)
+                str_value = str(value)
+            else:
+                str_value = value
+                try:
+                    datetime.datetime.strptime(value, '%Y/%m/%d')
+                except:
+                    self.raise_incompatible_type_error(value)
+            return str_value.split(' ')[0]
 
         # handle LIST type
         if self.fieldType == FieldType.LIST:
@@ -122,7 +125,7 @@ class Game:
         for field in fields or []:
             if not isinstance(field, FieldDefinition):
                 raise TypeError("parameter was not wrapped in FieldDefinition type")
-            
+        
             # If field already exists, remove the field
             index, existingField = self.find_field_definition_by_name(field.get_field_name())
             if existingField:

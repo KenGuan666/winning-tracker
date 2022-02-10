@@ -90,7 +90,7 @@ class JSONDatabase(Database):
     def verify_schema(self, tableSchema: Dict[str, Dict[str, str]], values: Dict[str, Any]) -> None:
 
         for fieldName, properties in tableSchema.items():
-            if fieldName in values:
+            if fieldName in values and values[fieldName] is not None:
                 passedType = type(values[fieldName])
                 requiredTypes = FieldDefinition.CommonNameToAcceptedTypes[properties[DatabaseKeys.SCHEMA_TYPE_KEY]]
                 if passedType not in requiredTypes:

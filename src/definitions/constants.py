@@ -17,6 +17,11 @@ class DefaultFieldNames:
     TAGS = 'Tags'
     NOTE = 'Note'
 
+class CustomFieldNames:
+    CURRENCY = 'Currency'
+    OCCASION = 'Occasion'
+    PEOPLE = 'People'
+
 class DatabaseKeys:
     SCHEMA_KEY = 'SCHEMA_DEFINITION'
     SCHEMA_TYPE_KEY = 'SCHEMA_TYPE'

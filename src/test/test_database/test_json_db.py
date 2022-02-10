@@ -14,7 +14,7 @@ class JSONDatabaseTests(unittest.TestCase):
     def setUpClass(cls):
         cls.json_db = JSONDatabase()
         cls.json_db.DEFAULT_DB_FILENAME = test_filename
-    
+
     @classmethod
     def tearDownClass(cls):
         os.remove(test_filename)

@@ -137,18 +137,18 @@ class TestSession(unittest.TestCase):
         self.assertRaises(TypeError, Session,
             self.gameWithNoFieldsRequired, { DefaultFieldNames.DATE: 'tomorrow' })
 
-    # Test Case: Session.__init__ should convert inputs in str type to correct type
+    # Test Case: Session.__init__ should convert inputs to correct type
     def test_init_type_conversion(self):
         strTypeValues = {
             DefaultFieldNames.NET_EARN: '10',
-            DefaultFieldNames.DATE: '2012/08/01', # Only YYYY/MM/DD tested
+            DefaultFieldNames.DATE: datetime.datetime(2012, 8, 1), # Only YYYY-MM-DD tested
             DefaultFieldNames.LENGTH: '10.2',
             DefaultFieldNames.TAGS: "TAG1, TAG2", # Only CSV tested
             DefaultFieldNames.NOTE: 'NOTE',
         }
         session = Session(self.defaultGame, strTypeValues)
         self.assertEqual(session.fieldValues[DefaultFieldNames.NET_EARN], 10)
-        self.assertEqual(session.fieldValues[DefaultFieldNames.DATE], datetime.datetime(2012, 8, 1))
+        self.assertEqual(session.fieldValues[DefaultFieldNames.DATE], '2012-08-01')
         self.assertEqual(session.fieldValues[DefaultFieldNames.LENGTH], 10.2)
 
     # Test Case: Session.__init__ should reject special illegal values
