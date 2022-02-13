@@ -1,12 +1,32 @@
+import datetime
+import requests
 from typing import List, Dict, Any
 
 from database import Database, JSONDatabase
-from definitions import Game, FieldDefinition, Session
+from definitions import Game, FieldDefinition, Session, ConversionRateFieldNames, useExchangeRatesAPI, EXCHANGE_RATE_URL, DEFAULT_RMB_EXCHANGE_RATE, Currencies
 
 class Backend:
 
-    def __init__(self, db: Database=JSONDatabase):
-        self.db = db()
+    def __init__(self, db: Database=JSONDatabase, dbFileName=None):
+        self.db = db(filename=dbFileName)
+        self.init_conversion_rate_cache()
+
+    def reset_database(self):
+        self.db.reset_database()
+        self.init_conversion_rate_cache()
+
+    def init_conversion_rate_cache(self):
+        # No-op if the table already exists
+        self.db.create_table(ConversionRateFieldNames.RMB_CONVERSION_RATE, {
+            ConversionRateFieldNames.RATE: {
+                "SCHEMA_TYPE": "number",
+                "SCHEMA_REQUIRED": True
+            },
+            ConversionRateFieldNames.COLLECTION_TIME: {
+                "SCHEMA_TYPE": "date",
+                "SCHEMA_REQUIRED": True
+            }
+        })
 
     def add_game(self, name: str, fields: List[FieldDefinition]) -> Game:
         # Game init may throw error on incorrect field type
@@ -15,7 +35,9 @@ class Backend:
         return created and game
 
     def get_all_games(self) -> List[Game]:
-        return self.db.get_all_table_names()
+        allTables = self.db.get_all_table_names()
+        allTables.remove(ConversionRateFieldNames.RMB_CONVERSION_RATE)
+        return allTables
 
     def add_session(self, session: Session, _id=None) -> str:
         # Game must already exists in db
@@ -25,8 +47,8 @@ class Backend:
         dbSchema = self.db.get_table_schema(gameName)
         return Game(gameName, dbSchema)
 
-    def get_sessions(self, gameName: str, filter) -> Dict[str, Session]:
-        if filter:
+    def get_sessions(self, gameName: str, _filter) -> Dict[str, Session]:
+        if _filter:
             raise NotImplementedError()
 
         game = self.construct_game_from_db(gameName)
@@ -36,7 +58,7 @@ class Backend:
         }
 
     def get_session_by_id(self, gameName: str, sessionId: str):
-        sessions = self.get_sessions(gameName, filter=None)
+        sessions = self.get_sessions(gameName, _filter=None)
         return sessionId in sessions and sessions[sessionId]
 
     def edit_session(self, gameName: str, sessionId: str, newValues: Dict[str, Any]):
@@ -52,3 +74,43 @@ class Backend:
 
     def delete_session(self, gameName: str, sessionId: str):
         return self.db.delete_row(gameName, sessionId)
+
+    def get_json_from_url(self, url):
+        res = requests.get(url)
+        if res.status_code == 200:
+            return res.json()
+
+    def get_conversion_rate_from_cache(self):
+        cachedDbRows = self.db.get_all_rows(ConversionRateFieldNames.RMB_CONVERSION_RATE).values()
+        if len(cachedDbRows):
+            cachedDbEntry = list(cachedDbRows)[0]
+            rate, date = cachedDbEntry[ConversionRateFieldNames.RATE], cachedDbEntry[ConversionRateFieldNames.COLLECTION_TIME]
+            if date == str(datetime.date.today()):
+                return rate
+
+    def get_conversion_rate_from_api(self):
+        res = self.get_json_from_url(EXCHANGE_RATE_URL)
+        if res:
+            CNYRate = res['rates'][Currencies.CNY]
+            USDRate = res['rates'][Currencies.USD]
+            return CNYRate / USDRate
+
+    def cache_exchange_rate(self, rate):
+        cachedDbRows = self.db.get_all_rows(ConversionRateFieldNames.RMB_CONVERSION_RATE)
+        for uuid in cachedDbRows:
+            self.db.delete_row(ConversionRateFieldNames.RMB_CONVERSION_RATE, uuid)
+        self.db.insert_row(ConversionRateFieldNames.RMB_CONVERSION_RATE, {
+            ConversionRateFieldNames.RATE: rate,
+            ConversionRateFieldNames.COLLECTION_TIME: str(datetime.date.today())
+        })
+
+    def get_rmb_conversion_rate(self):
+        cachedRate = self.get_conversion_rate_from_cache()
+        urlRate = None
+        if cachedRate:
+            return cachedRate
+        if useExchangeRatesAPI:
+            urlRate = self.get_conversion_rate_from_api()
+        returnRate = urlRate if urlRate else DEFAULT_RMB_EXCHANGE_RATE
+        self.cache_exchange_rate(returnRate)
+        return returnRate

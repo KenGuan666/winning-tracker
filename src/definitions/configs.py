@@ -1,0 +1,1 @@
+useExchangeRatesAPI = True

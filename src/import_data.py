@@ -120,7 +120,7 @@ def import_data_to_db():
 def import_legacy_data():
     global backend, game
     backend = Backend()
-    backend.db.reset_database()
+    backend.reset_database()
 
     fields = [
         FieldDefinition(CustomFieldNames.OCCASION, FieldType.TEXT, required=True),

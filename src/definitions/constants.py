@@ -1,3 +1,4 @@
+from .configs import useExchangeRatesAPI
 
 class GameName:
     TEXAS_HOLDEM = "Texas Hold'em"
@@ -28,8 +29,22 @@ class DatabaseKeys:
     SCHEMA_REQUIRED_KEY = 'SCHEMA_REQUIRED'
     ROWS_KEY = 'ROWS'
 
+class ConversionRateFieldNames:
+    RMB_CONVERSION_RATE = 'RMB_CONVERSION_RATE'
+    RATE = 'RATE'
+    COLLECTION_TIME = 'COLLECTION_TIME'
+
+class Currencies:
+    CNY = 'CNY'
+    USD = 'USD'
+
 DISALLOWED_NUMBER_INPUTS = [
     'nan',
     'inf',
     'infinity',
 ]
+
+if useExchangeRatesAPI:
+    from .api_key import exchangeRatesAPIKey
+    EXCHANGE_RATE_URL = f'http://api.exchangeratesapi.io/v1/latest?access_key={exchangeRatesAPIKey}'
+DEFAULT_RMB_EXCHANGE_RATE = 6.4

@@ -6,6 +6,8 @@ from .abstract_database import Database
 from definitions import FieldDefinition, DatabaseKeys
 
 
+DEFAULT_DB_FILENAME = 'json_database.json'
+
 """
 A JSON-based Database implementation
 Representation:
@@ -34,21 +36,22 @@ Representation:
 }
 """
 class JSONDatabase(Database):
-    
-    DEFAULT_DB_FILENAME = 'json_database.json'
+
+    def __init__(self, filename=None):
+        self.filename = filename or DEFAULT_DB_FILENAME
 
     def reset_database(self):
         self.write_data_to_disk({})
 
     def read_data_to_memory(self) -> Dict[str, Dict]:
         try:
-            with open(self.DEFAULT_DB_FILENAME) as f:
+            with open(self.filename) as f:
                 return json.load(f)
         except:
             return {}
 
     def write_data_to_disk(self, data: Dict[str, Dict]):
-        with open(self.DEFAULT_DB_FILENAME, 'w') as f:
+        with open(self.filename, 'w') as f:
             json.dump(data, f)
 
     def get_all_table_names(self):

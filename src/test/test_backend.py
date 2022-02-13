@@ -1,8 +1,9 @@
 import unittest
 import os
+import datetime
 
 from backend import Backend
-from definitions import FieldDefinition, Game, GameName, Session, DefaultFieldNames
+from definitions import FieldDefinition, Game, GameName, Session, DefaultFieldNames, ConversionRateFieldNames, DEFAULT_RMB_EXCHANGE_RATE
 
 
 test_filename = 'test_filename.json'
@@ -11,9 +12,8 @@ class BackendTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.backend = Backend()
-        cls.backend.db.DEFAULT_DB_FILENAME = test_filename
-        cls.backend.db.reset_database()
+        cls.backend = Backend(dbFileName=test_filename)
+        cls.backend.reset_database()
 
     @classmethod
     def tearDownClass(cls):
@@ -31,7 +31,7 @@ class TestGameAPI(BackendTests):
 
         # Check Game and schema in backend.db
         expectedAllGames = [GameName.TEXAS_HOLDEM]
-        self.assertCountEqual(self.backend.db.get_all_table_names(), expectedAllGames)
+        self.assertCountEqual(self.backend.db.get_all_table_names(), expectedAllGames + [ConversionRateFieldNames.RMB_CONVERSION_RATE])
 
         expectedGameSchema = [f.as_dict() for f in Game.DefaultFields]
         self.assertCountEqual(
@@ -60,7 +60,7 @@ class TestGameAPI(BackendTests):
 class TestSessionAPI(BackendTests):
 
     def setUp(self):
-        self.backend.db.reset_database()
+        self.backend.reset_database()
         self.game = self.backend.add_game(GameName.TEXAS_HOLDEM, [])
         self.uuid1 = self.backend.add_session(Session(self.game, { DefaultFieldNames.NET_EARN: 10 }))
         self.uuid2 = self.backend.add_session(Session(self.game, { DefaultFieldNames.NET_EARN: -10 }))
@@ -86,7 +86,7 @@ class TestSessionAPI(BackendTests):
             self.uuid2: Session(self.game, { DefaultFieldNames.NET_EARN: -10 }),
             self.uuid3: Session(self.game, { DefaultFieldNames.NET_EARN: 0 }),
         }
-        for _id, actualSession in self.backend.get_sessions(self.game.get_name(), filter=None).items():
+        for _id, actualSession in self.backend.get_sessions(self.game.get_name(), _filter=None).items():
             self.assertTrue(actualSession.equals(expectedSessions[_id]))
 
     # Test Case: backend.get_sessions with filter conditions
@@ -152,8 +152,74 @@ class TestSessionAPI(BackendTests):
             self.uuid2: Session(self.game, { DefaultFieldNames.NET_EARN: -10 }),
             self.uuid3: Session(self.game, { DefaultFieldNames.NET_EARN: 0 }),
         }
-        for _id, actualSession in self.backend.get_sessions(self.game.get_name(), filter=None).items():
+        for _id, actualSession in self.backend.get_sessions(self.game.get_name(), _filter=None).items():
             self.assertTrue(actualSession.equals(expectedSessions[_id]))
 
         # Should return False if session is not present
         self.assertFalse(self.backend.delete_session(self.game.get_name(), 'bad id'))
+
+
+# backend.get_rmb_conversion_rate
+class TestGetRMBConversionRate(BackendTests):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.backend = Backend(dbFileName=test_filename)
+        cls.backend.reset_database()
+
+    @classmethod
+    def tearDownClass(cls):
+        os.remove(test_filename)
+
+    def setUp(self):
+        self.backend.reset_database()
+
+    # Test Case: backend init should create table for conversion rate cache
+    def test_create_rate_table(self):
+        expectedSchema = {
+            ConversionRateFieldNames.RATE: {
+                "SCHEMA_TYPE": "number",
+                "SCHEMA_REQUIRED": True
+            },
+            ConversionRateFieldNames.COLLECTION_TIME: {
+                "SCHEMA_TYPE": "date",
+                "SCHEMA_REQUIRED": True
+            }
+        }
+
+        # throws ValueError if table is not created
+        fieldDefinitions = self.backend.db.get_table_schema(ConversionRateFieldNames.RMB_CONVERSION_RATE)
+        self.assertEqual(len(fieldDefinitions), 2)
+        self.assertDictEqual(fieldDefinitions[0].as_dict() | fieldDefinitions[1].as_dict(), expectedSchema)
+
+    # Test Case: should use conversion rate cached in DB if saved within 24 hrs
+    def test_get_rate_from_cache(self):
+
+        # Mock a valid conversion rate cache in DB
+        self.backend.db.insert_row(ConversionRateFieldNames.RMB_CONVERSION_RATE, {
+            ConversionRateFieldNames.RATE: 0.001,
+            ConversionRateFieldNames.COLLECTION_TIME: str(datetime.date.today())
+        })
+
+        # Test the helper function
+        self.assertEqual(self.backend.get_conversion_rate_from_cache(), 0.001)
+
+        # Test the main function which calls helper function
+        self.assertEqual(self.backend.get_rmb_conversion_rate(), 0.001)
+
+    # Test Case: should use conversion rate from URL if cache is expired or missing
+    # Number of API calls allowed is limited per month. Do not run until shipping new version
+    def test_get_rate_from_url(self):
+
+        # Mock an expired conversion rate cache in DB
+        self.backend.db.insert_row(ConversionRateFieldNames.RMB_CONVERSION_RATE, {
+            ConversionRateFieldNames.RATE: 0.001,
+            ConversionRateFieldNames.COLLECTION_TIME: str(datetime.date.today() - datetime.timedelta(days=1))
+        })
+
+        rate = self.backend.get_rmb_conversion_rate()
+        self.assertLessEqual(rate, 8)
+        self.assertGreaterEqual(rate, 5)
+
+        # Should cache the updated rate
+        self.assertEqual(rate, self.backend.get_conversion_rate_from_cache())
