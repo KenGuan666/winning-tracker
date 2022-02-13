@@ -3,7 +3,8 @@ import os
 import json
 
 from database import JSONDatabase
-from definitions import FieldDefinition, GameName, FieldType, DatabaseKeys, DefaultFieldNames
+from definitions import FieldDefinition, GameName, FieldType, \
+    DatabaseKeys, DefaultFieldNames
 
 
 test_filename = 'test_filename.json'

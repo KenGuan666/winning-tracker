@@ -2,6 +2,6 @@
 *.pyo
 
 __pycache__/
-database/json_database.json
+src/json_database.json
 definitions/api_key.py
 import_data.py

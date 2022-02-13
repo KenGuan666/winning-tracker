@@ -1,8 +1,8 @@
 import unittest
 import datetime
 
-from definitions import FieldDefinition, FieldType, DefaultFieldNames, \
-                    Game, GameName, Session
+from definitions import Game, Session, \
+    FieldDefinition, GameName, FieldType, DefaultFieldNames
 
 
 class TestFieldDefinition(unittest.TestCase):

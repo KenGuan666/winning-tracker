@@ -3,7 +3,10 @@ import os
 import datetime
 
 from backend import Backend
-from definitions import FieldDefinition, Game, GameName, Session, DefaultFieldNames, ConversionRateFieldNames, DEFAULT_RMB_EXCHANGE_RATE
+from definitions import Game, Session, \
+    FieldDefinition, DatabaseKeys, FieldType, GameName, \
+    DefaultFieldNames, ConversionRateFieldNames, \
+    DEFAULT_RMB_EXCHANGE_RATE
 
 
 test_filename = 'test_filename.json'
@@ -178,12 +181,12 @@ class TestGetRMBConversionRate(BackendTests):
     def test_create_rate_table(self):
         expectedSchema = {
             ConversionRateFieldNames.RATE: {
-                "SCHEMA_TYPE": "number",
-                "SCHEMA_REQUIRED": True
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             },
             ConversionRateFieldNames.COLLECTION_TIME: {
-                "SCHEMA_TYPE": "date",
-                "SCHEMA_REQUIRED": True
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.DATE,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             }
         }
 
@@ -209,17 +212,17 @@ class TestGetRMBConversionRate(BackendTests):
 
     # Test Case: should use conversion rate from URL if cache is expired or missing
     # Number of API calls allowed is limited per month. Do not run until shipping new version
-    def test_get_rate_from_url(self):
+    # def test_get_rate_from_url(self):
 
-        # Mock an expired conversion rate cache in DB
-        self.backend.db.insert_row(ConversionRateFieldNames.RMB_CONVERSION_RATE, {
-            ConversionRateFieldNames.RATE: 0.001,
-            ConversionRateFieldNames.COLLECTION_TIME: str(datetime.date.today() - datetime.timedelta(days=1))
-        })
+    #     # Mock an expired conversion rate cache in DB
+    #     self.backend.db.insert_row(ConversionRateFieldNames.RMB_CONVERSION_RATE, {
+    #         ConversionRateFieldNames.RATE: 0.001,
+    #         ConversionRateFieldNames.COLLECTION_TIME: str(datetime.date.today() - datetime.timedelta(days=1))
+    #     })
 
-        rate = self.backend.get_rmb_conversion_rate()
-        self.assertLessEqual(rate, 8)
-        self.assertGreaterEqual(rate, 5)
+    #     rate = self.backend.get_rmb_conversion_rate()
+    #     self.assertLessEqual(rate, 8)
+    #     self.assertGreaterEqual(rate, 5)
 
-        # Should cache the updated rate
-        self.assertEqual(rate, self.backend.get_conversion_rate_from_cache())
+    #     # Should cache the updated rate
+    #     self.assertEqual(rate, self.backend.get_conversion_rate_from_cache())

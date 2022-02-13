@@ -1,9 +1,12 @@
 import datetime
-import requests
 from typing import List, Dict, Any
 
 from database import Database, JSONDatabase
-from definitions import Game, FieldDefinition, Session, ConversionRateFieldNames, useExchangeRatesAPI, EXCHANGE_RATE_URL, DEFAULT_RMB_EXCHANGE_RATE, Currencies
+from definitions import Game, FieldDefinition, Session, \
+    DatabaseKeys, FieldType, ConversionRateFieldNames, Currencies, \
+    useExchangeRatesAPI, EXCHANGE_RATE_URL, DEFAULT_RMB_EXCHANGE_RATE
+
+from .utils import get_json_from_url
 
 class Backend:
 
@@ -19,12 +22,12 @@ class Backend:
         # No-op if the table already exists
         self.db.create_table(ConversionRateFieldNames.RMB_CONVERSION_RATE, {
             ConversionRateFieldNames.RATE: {
-                "SCHEMA_TYPE": "number",
-                "SCHEMA_REQUIRED": True
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.NUMBER,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             },
             ConversionRateFieldNames.COLLECTION_TIME: {
-                "SCHEMA_TYPE": "date",
-                "SCHEMA_REQUIRED": True
+                DatabaseKeys.SCHEMA_TYPE_KEY: FieldType.DATE,
+                DatabaseKeys.SCHEMA_REQUIRED_KEY: True
             }
         })
 
@@ -74,11 +77,6 @@ class Backend:
 
     def delete_session(self, gameName: str, sessionId: str):
         return self.db.delete_row(gameName, sessionId)
-
-    def get_json_from_url(self, url):
-        res = requests.get(url)
-        if res.status_code == 200:
-            return res.json()
 
     def get_conversion_rate_from_cache(self):
         cachedDbRows = self.db.get_all_rows(ConversionRateFieldNames.RMB_CONVERSION_RATE).values()

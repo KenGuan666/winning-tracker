@@ -7,7 +7,8 @@
 import datetime
 import uuid
 from typing import List, Dict, Any
-from .constants import FieldType, DefaultFieldNames, DatabaseKeys, DISALLOWED_NUMBER_INPUTS
+from .constants import FieldType, DefaultFieldNames, DatabaseKeys, \
+    DISALLOWED_NUMBER_INPUTS
 
 
 """
