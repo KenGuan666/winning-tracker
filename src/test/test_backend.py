@@ -4,6 +4,7 @@ import datetime
 
 from backend import Backend
 from definitions import Game, Session, \
+    FilterOperator, FilterCondition, VisualizeFilters, \
     FieldDefinition, DatabaseKeys, FieldType, GameName, \
     DefaultFieldNames, ConversionRateFieldNames, \
     DEFAULT_RMB_EXCHANGE_RATE
@@ -89,12 +90,22 @@ class TestSessionAPI(BackendTests):
             self.uuid2: Session(self.game, { DefaultFieldNames.NET_EARN: -10 }),
             self.uuid3: Session(self.game, { DefaultFieldNames.NET_EARN: 0 }),
         }
-        for _id, actualSession in self.backend.get_sessions(self.game.get_name(), _filter=None).items():
-            self.assertTrue(actualSession.equals(expectedSessions[_id]))
+        actualSessions = self.backend.get_sessions(self.game.get_name(), _filter=None)
+        for _id, expectedSession in expectedSessions:
+            self.assertTrue(actualSessions[_id].equals(expectedSession))
 
     # Test Case: backend.get_sessions with filter conditions
     def test_get_sessions_with_filters(self):
-        pass
+        expectedSessions = {
+            self.uuid1: Session(self.game, { DefaultFieldNames.NET_EARN: 10 }),
+            self.uuid3: Session(self.game, { DefaultFieldNames.NET_EARN: 0 }),
+        }
+        _filter = VisualizeFilters({
+            DefaultFieldNames.NET_EARN: [FilterCondition(FilterOperator.GREATER, -1)]
+        })
+        for _id, actualSession in self.backend.get_sessions(self.game.get_name(), _filter=_filter).items():
+            self.assertTrue(actualSession.equals(expectedSessions[_id]))
+
 
     # Test Case: backend.get_session_by_id
     def test_get_session_by_id(self):

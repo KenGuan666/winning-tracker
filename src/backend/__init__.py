@@ -51,11 +51,9 @@ class Backend:
         return Game(gameName, dbSchema)
 
     def get_sessions(self, gameName: str, _filter) -> Dict[str, Session]:
-        if _filter:
-            raise NotImplementedError()
 
         game = self.construct_game_from_db(gameName)
-        dbRows = self.db.get_all_rows(gameName)
+        dbRows = self.db.get_rows_with_filter(gameName, _filter)
         return {
             _id: Session(game, fieldValues) for _id, fieldValues in dbRows.items()
         }

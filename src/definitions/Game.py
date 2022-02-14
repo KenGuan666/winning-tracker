@@ -79,4 +79,3 @@ class Game:
             if existingField:
                 fieldValues[fieldName] = existingField.parse_entry(fieldValue)
         return fieldValues
-
