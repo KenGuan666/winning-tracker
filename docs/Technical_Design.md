@@ -51,8 +51,7 @@ class Game:
 
 class FilterCondition:
    operator: enum[Greater, Less, Equal, Contains]
-   operandType: type
-   operand: operandType
+   operand: Any
    negate: bool
 
 # Defines which fields to filter Session results

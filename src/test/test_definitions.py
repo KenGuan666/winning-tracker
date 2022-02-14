@@ -2,6 +2,7 @@ import unittest
 import datetime
 
 from definitions import Game, Session, \
+    FilterOperator, FilterCondition, VisualizeFilters, \
     FieldDefinition, GameName, FieldType, DefaultFieldNames
 
 
@@ -156,3 +157,36 @@ class TestSession(unittest.TestCase):
         illegalNumberValues = { DefaultFieldNames.NET_EARN: 'NaN' }
         self.assertRaises(TypeError, Session,
             self.defaultGame, illegalNumberValues)
+
+
+class TestFilterCondition(unittest.TestCase):
+
+    # Test Case: FilterCondition.__init__ should typecheck inputs
+    def test_init_typecheck(self):
+
+        # should reject inputs with unexpected type
+        operator = FilterOperator.EQUAL
+        operand = { 'dicType' : 1 }
+        self.assertRaises(TypeError, FilterCondition, operator, operand)
+
+        # should reject inputs with incompatible types
+        operator = FilterOperator.CONTAINS
+        operand = 3
+        self.assertRaises(TypeError, FilterCondition, operator, operand)
+
+        operator = FilterOperator.LESS
+        operand = ['Person 1']
+        self.assertRaises(TypeError, FilterCondition, operator, operand)
+
+        # should accept inputs with compatible types
+        operator = FilterOperator.LESS
+        operand = '2022-02-13'
+        FilterCondition(operator, operand)
+
+        operator = FilterOperator.EQUAL
+        operand = 7.5
+        FilterCondition(operator, operand)
+
+        operator = FilterOperator.CONTAINS
+        operand = ['Person 1']
+        FilterCondition(operator, operand)

@@ -3,7 +3,8 @@ import uuid
 from typing import List, Dict, Any
 
 from .abstract_database import Database
-from definitions import FieldDefinition, DatabaseKeys
+from definitions import FilterOperator, FilterCondition, VisualizeFilters, \
+    FieldDefinition, DatabaseKeys
 
 
 DEFAULT_DB_FILENAME = 'json_database.json'
@@ -138,10 +139,63 @@ class JSONDatabase(Database):
 
     """
     Returns all entries under tableName
-    or None if tableName doesn't exist
+    Returns None if tableName doesn't exist
     """
     def get_all_rows(self, tableName: str) -> Dict[str, Dict[str, Any]]:
         data = self.read_data_to_memory()
         if tableName not in data:
             return
         return data[tableName][DatabaseKeys.ROWS_KEY]
+
+    """
+    Constructs a filter function which returns True
+        when applied to rows satisfying a FilterCondition
+
+    Example: func = self.get_filter_function(_filter: NET_EARN GREATER than 5)
+    func(row WHERE NET_EARN = 6)
+    >>> True
+    func(row WHERE NET_EARN = 4)
+    >>> False
+    """
+    def get_single_filter_function(self, columnKey: str, filterCondition: FilterCondition):
+        if filterCondition.operator == FilterOperator.EQUAL:
+            f = lambda entry: \
+                filterCondition.operand is None and columnKey not in entry or \
+                columnKey in entry and entry[columnKey] == filterCondition.operand
+        elif filterCondition.operator == FilterOperator.GREATER:
+            f = lambda entry: \
+                columnKey in entry and entry[columnKey] > filterCondition.operand
+        elif filterCondition.operator == FilterOperator.LESS:
+            f = lambda entry: \
+                columnKey in entry and entry[columnKey] < filterCondition.operand
+        else: #filterCondition.operator == FilterOperator.CONTAINS
+            f = lambda entry: \
+                columnKey in entry and filterCondition.operand in entry[columnKey]
+
+        return lambda entry: filterCondition.negate != f(entry)
+
+    """
+    Constructs a filter function which returns True
+        when applied to rows which satisfy all FilterConditions in VisualizeFilter
+    """
+    def get_filter_function(self, _filter: VisualizeFilters):
+        filterFuncs = [lambda _: True]
+        if _filter:
+            for columnKey, filterConditions in _filter.filters.items():
+                for filterCondition in filterConditions:
+                    filterFuncs.append(self.get_single_filter_function(columnKey, filterCondition))
+        return lambda entry: all([f(entry) for f in filterFuncs])
+
+
+    """
+    Returns all entries under tableName which satisfy the filter conditions
+    """
+    def get_rows_with_filter(self, tableName: str, _filter: VisualizeFilters):
+        allRows = self.get_all_rows(tableName)
+        if not allRows:
+            return
+        filterFunction = self.get_filter_function(_filter)
+        return {
+            _id: entry for _id, entry in allRows.items() \
+                if filterFunction(entry)
+        }
