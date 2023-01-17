@@ -53,7 +53,7 @@ class JSONDatabase(Database):
 
     def write_data_to_disk(self, data: Dict[str, Dict]):
         with open(self.filename, 'w') as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=4)
 
     def get_all_table_names(self):
         data = self.read_data_to_memory()

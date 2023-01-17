@@ -37,7 +37,7 @@ class Backend:
         created = self.db.create_table(name, game.all_fields_as_dict())
         return created and game
 
-    def get_all_games(self) -> List[Game]:
+    def get_all_games(self) -> List[str]:
         allTables = self.db.get_all_table_names()
         allTables.remove(ConversionRateFieldNames.RMB_CONVERSION_RATE)
         return allTables
