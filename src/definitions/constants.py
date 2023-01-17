@@ -1,27 +1,27 @@
 from .configs import useExchangeRatesAPI
 
 class GameName:
-    TEXAS_HOLDEM = "Texas Hold'em"
-    AOE4 = 'Age of Empires IV'
-    PLO = 'Pot Limit Omaha'
+    TEXAS_HOLDEM = "TEXAS HOLD'EM"
+    AOE4 = 'AOE4'
+    PLO = 'PLO'
 
 class FieldType:
-    NUMBER = 'number'
-    DATE = 'date'
-    TEXT = 'text'
-    LIST = 'list'
+    NUMBER = 'NUMBER'
+    DATE = 'DATE'
+    TEXT = 'TEXT'
+    LIST = 'LIST'
 
 class DefaultFieldNames:
-    NET_EARN = 'Net Earn'
-    DATE = 'Date'
-    LENGTH = 'Length'
-    TAGS = 'Tags'
-    NOTE = 'Note'
+    NET_EARN = 'NET EARN'
+    DATE = 'DATE'
+    LENGTH = 'LENGTH'
+    TAGS = 'TAGS'
+    NOTE = 'NOTE'
 
 class CustomFieldNames:
-    CURRENCY = 'Currency'
-    OCCASION = 'Occasion'
-    PEOPLE = 'People'
+    CURRENCY = 'CURRENCY'
+    OCCASION = 'OCCASION'
+    PEOPLE = 'PEOPLE'
 
 class DatabaseKeys:
     SCHEMA_KEY = 'SCHEMA_DEFINITION'

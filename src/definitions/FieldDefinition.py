@@ -83,7 +83,10 @@ class FieldDefinition:
                 try:
                     datetime.datetime.strptime(value, '%Y/%m/%d')
                 except:
-                    self.raise_incompatible_type_error(value)
+                    try:
+                        datetime.datetime.strptime(value, '%Y-%m-%d')
+                    except:
+                        self.raise_incompatible_type_error(value)
             return str_value.split(' ')[0]
 
         # handle LIST type

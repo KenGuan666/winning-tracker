@@ -85,7 +85,7 @@ class Backend:
                 return rate
 
     def get_conversion_rate_from_api(self):
-        res = self.get_json_from_url(EXCHANGE_RATE_URL)
+        res = get_json_from_url(EXCHANGE_RATE_URL)
         if res:
             CNYRate = res['rates'][Currencies.CNY]
             USDRate = res['rates'][Currencies.USD]

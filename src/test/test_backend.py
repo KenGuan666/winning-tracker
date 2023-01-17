@@ -91,7 +91,7 @@ class TestSessionAPI(BackendTests):
             self.uuid3: Session(self.game, { DefaultFieldNames.NET_EARN: 0 }),
         }
         actualSessions = self.backend.get_sessions(self.game.get_name(), _filter=None)
-        for _id, expectedSession in expectedSessions:
+        for _id, expectedSession in expectedSessions.items():
             self.assertTrue(actualSessions[_id].equals(expectedSession))
 
     # Test Case: backend.get_sessions with filter conditions
@@ -204,7 +204,7 @@ class TestGetRMBConversionRate(BackendTests):
         # throws ValueError if table is not created
         fieldDefinitions = self.backend.db.get_table_schema(ConversionRateFieldNames.RMB_CONVERSION_RATE)
         self.assertEqual(len(fieldDefinitions), 2)
-        self.assertDictEqual(fieldDefinitions[0].as_dict() | fieldDefinitions[1].as_dict(), expectedSchema)
+        self.assertDictEqual({**fieldDefinitions[0].as_dict(), **fieldDefinitions[1].as_dict()}, expectedSchema)
 
     # Test Case: should use conversion rate cached in DB if saved within 24 hrs
     def test_get_rate_from_cache(self):

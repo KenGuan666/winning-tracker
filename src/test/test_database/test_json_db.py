@@ -50,8 +50,8 @@ class TestTableAPI(JSONDatabaseTests):
     # Test Case: db.get_all_table_names
     def test_get_all_table_names(self):
         db_state_text = """{ 
-            "Texas Hold'em": {},
-            "Age of Empires IV": {}
+            "TEXAS HOLD'EM": {},
+            "AOE4": {}
         }"""
         with open(test_filename, 'w') as f:
             f.write(db_state_text)
